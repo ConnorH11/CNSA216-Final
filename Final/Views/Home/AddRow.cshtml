@@ -1,0 +1,133 @@
+@{
+    ViewData["Title"] = "Add New Row";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>@ViewData["Title"]</title>
+    <style>
+        body {
+            background-color: #f4f4f9;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            position: relative;
+            top: -30px; /* Move the container up */
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            font-size: 24px;
+        }
+
+        .form-container {
+            margin-top: 10px; /* Move the form up */
+            text-align: center;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+            .form-container h3 {
+                margin-bottom: 20px;
+                color: #333;
+                font-size: 20px;
+            }
+
+            .form-container div {
+                margin-bottom: 15px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .form-container label {
+                display: block;
+                margin-right: 10px;
+                color: #555;
+                width: 150px;
+                text-align: right;
+            }
+
+            .form-container input[type="text"] {
+                padding: 10px;
+                width: 280px; /* Adjust the width */
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                transition: border-color 0.3s;
+            }
+
+                .form-container input[type="text"]:focus {
+                    border-color: #4CAF50;
+                }
+
+            .form-container input[type="submit"] {
+                padding: 10px 20px;
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
+
+                .form-container input[type="submit"]:hover {
+                    background-color: #45a049;
+                }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+    <script>
+        function validateForm(event) {
+            var inputs = document.querySelectorAll('.form-container input[type="text"]');
+            var isValid = true;
+            inputs.forEach(function (input) {
+                if (input.value.trim() === '') {
+                    isValid = false;
+                    input.classList.add('error');
+                } else {
+                    input.classList.remove('error');
+                }
+            });
+
+            if (!isValid) {
+                event.preventDefault();
+                alert("Please fill out all required fields.");
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h2>Add New Row to @ViewBag.TableName</h2>
+        <div class="form-container">
+            <h3>Enter Row Data</h3>
+            <form method="post" action="/Home/AddRow" onsubmit="validateForm(event)">
+                @foreach (var column in Model.Columns)
+                {
+                    <div>
+                        <label>@column.ColumnName</label>
+                        <input type="text" name="rowData[@column.ColumnName]" />
+                    </div>
+                }
+                <input type="hidden" name="tableName" value="@ViewBag.TableName" />
+                <input type="submit" value="Add Row" />
+            </form>
+        </div>
+    </div>
+</body>
+</html>

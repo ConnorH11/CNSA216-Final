@@ -1,0 +1,40 @@
+﻿@{
+    ViewData["Title"] = "Graphs";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Incident Graph</h2>
+
+<div id="graphDiv"></div>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<script>
+    var incidentData = @Html.Raw(ViewBag.IncidentData);
+
+    var dates = [];
+    var counts = [];
+
+    incidentData.forEach(function(item) {
+        dates.push(item.incident_date);
+        counts.push(parseFloat(item.incident_count));
+    });
+
+    var trace = {
+        x: dates,
+        y: counts,
+        type: 'scatter',
+        mode: 'lines+markers',
+        marker: { color: 'blue' }
+    };
+
+    var data = [trace];
+
+    var layout = {
+        title: 'Incident Count per Day',
+        xaxis: { title: 'Date' },
+        yaxis: { title: 'Incident Count' }
+    };
+
+    Plotly.newPlot('graphDiv', data, layout);
+</script>

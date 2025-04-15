@@ -1,0 +1,315 @@
+@using System.Data
+@{
+    string searchQuery = Context.Request.Query["searchQuery"].FirstOrDefault();
+    int pageSize = 50;
+    int pageIndex = Context.Request.Query["pageIndex"].FirstOrDefault() != null ? int.Parse(Context.Request.Query["pageIndex"].FirstOrDefault()) : 0;
+    string sortOrder = Context.Request.Query["sortOrder"].FirstOrDefault();
+    DataTable dataTable = Model as DataTable;
+
+    // Initialize filteredData with dataTable to avoid null references
+    DataTable filteredData = dataTable.Clone(); // Clone the structure of the data table
+
+    // Implement search logic
+    if (!string.IsNullOrEmpty(searchQuery))
+    {
+        var filteredRows = dataTable.AsEnumerable()
+            .Where(row => row.ItemArray.Any(field => field.ToString().Contains(searchQuery, StringComparison.OrdinalIgnoreCase)))
+            .ToList();
+
+        if (filteredRows.Any())
+        {
+            filteredData = filteredRows.CopyToDataTable(); // Copy to DataTable only if there are matches
+        }
+    }
+    else
+    {
+        filteredData = dataTable; // If no search query, just use the original data
+    }
+
+    // Sorting
+    if (!string.IsNullOrEmpty(sortOrder))
+    {
+        if (sortOrder == "asc")
+        {
+            filteredData = filteredData.AsEnumerable()
+                .OrderBy(row => row.Field<int>("seqnos"))
+                .CopyToDataTable();
+        }
+        else if (sortOrder == "desc")
+        {
+            filteredData = filteredData.AsEnumerable()
+                .OrderByDescending(row => row.Field<int>("seqnos"))
+                .CopyToDataTable();
+        }
+    }
+
+    // Handle pagination
+int totalRows = filteredData.Rows.Count;
+int pageCount = (int)Math.Ceiling((double)totalRows / pageSize);
+
+// Check if there are results to avoid CopyToDataTable() exception
+IEnumerable<DataRow> pagedRows = filteredData.AsEnumerable()
+    .Skip(pageIndex * pageSize)
+    .Take(pageSize);
+
+DataTable pagedData = pagedRows.Any() ? pagedRows.CopyToDataTable() : filteredData.Clone(); // Return empty structure if no results
+
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Database</title>
+    <style>
+        body {
+            background-color: #f4f4f9;
+            margin: 0;
+        }
+
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            position: relative;
+            top: -20px; /* Adjust the container position */
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #fff; /* Ensure the table background is white */
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #ddd;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+            .pagination input[type="number"] {
+                width: 70px; /* Make the input box larger */
+                text-align: center;
+                margin-right: 10px;
+                padding: 8px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+            }
+
+            .pagination button {
+                padding: 8px 16px;
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                margin: 0 5px;
+            }
+
+                .pagination button:hover {
+                    background-color: #45a049;
+                }
+
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 20px; /* Ensure space for the scrollbar */
+        }
+
+        .search-container {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+            .search-container input[type="text"] {
+                padding: 8px;
+                width: 300px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+            }
+
+            .search-container input[type="submit"] {
+                padding: 8px 16px;
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+
+                .search-container input[type="submit"]:hover {
+                    background-color: #45a049;
+                }
+
+        .filter-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+            .filter-container select {
+                padding: 8px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+
+        .add-row-button {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+            .add-row-button a {
+                padding: 10px 20px;
+                background-color: #4CAF50;
+                color: white;
+                text-decoration: none;
+                border-radius: 4px;
+                display: inline-block;
+            }
+
+                .add-row-button a:hover {
+                    background-color: #45a049;
+                }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+    <script>
+        function checkTableData() {
+            var table = document.querySelector("table tbody");
+            if (table && table.rows.length === 0) {
+                alert("No data found for the given search query.");
+            }
+        }
+
+        function handleSearch(event) {
+            event.preventDefault();
+            var searchQuery = document.querySelector('input[name="searchQuery"]').value;
+            var rows = document.querySelectorAll("table tbody tr");
+            var found = false;
+
+            rows.forEach(function (row) {
+                var cells = row.querySelectorAll("td");
+                var match = false;
+                cells.forEach(function (cell) {
+                    if (cell.textContent.toLowerCase().includes(searchQuery.toLowerCase())) {
+                        match = true;
+                    }
+                });
+                if (match) {
+                    row.style.display = "";
+                    found = true;
+                } else {
+                    row.style.display = "none";
+                }
+            });
+
+            if (!found) {
+                alert("No data found for the given search query.");
+            }
+        }
+
+        function handleSort(event) {
+            var sortOrder = event.target.value;
+            var form = document.querySelector('.filter-container form');
+            form.submit();
+        }
+    </script>
+</head>
+<body onload="checkTableData()">
+    <div class="container">
+        <h2>Data from @ViewBag.TableName</h2>
+
+    <div class="search-container">
+    <form method="get" action="@Url.Action("Database", "Home")">
+        <input type="text" name="searchQuery" placeholder="Search..." value="@searchQuery" />
+        <input type="hidden" name="tableName" value="@ViewBag.TableName" />
+        <input type="submit" value="Search" />
+    </form>
+    </div>
+
+
+        <div class="filter-container">
+            <form method="get">
+                <input type="hidden" name="searchQuery" value="@searchQuery" />
+                <select name="sortOrder" onchange="handleSort(event)">
+                    <option value="">Sort by Seqnos</option>
+                    <option value="asc">Least to Greatest</option>
+                    <option value="desc">Greatest to Least</option>
+                </select>
+            </form>
+        </div>
+
+        <div class="pagination">
+            <form method="get">
+                <input type="hidden" name="searchQuery" value="@searchQuery" />
+                <input type="number" name="pageIndex" min="0" max="@pageCount - 1" value="@pageIndex" />
+                <button type="submit">Go</button>
+            </form>
+        </div>
+
+        <div class="add-row-button">
+            <a href="@Url.Action("AddRow", "Home", new { tableName = ViewBag.TableName })">Add New Row</a>
+        </div>
+
+        @if (Model != null && Model.Rows.Count > 0)
+        {
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            @foreach (DataColumn column in Model.Columns)
+                            {
+                                <th>@column.ColumnName</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (DataRow row in pagedData.Rows)
+                        {
+                            <tr>
+                                @foreach (var item in row.ItemArray)
+                                {
+                                    <td>@item</td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p>No data available for @ViewBag.TableName.</p>
+        }
+    </div>
+</body>
+</html>

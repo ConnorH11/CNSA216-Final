@@ -1,0 +1,52 @@
+﻿@{
+    ViewData["Title"] = "Rules";
+
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <style>
+        body {
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        h1 {
+            color: #4CAF50;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .rules {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .rules p {
+            font-size: 18px;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+        .rules p::before {
+            content: "• ";
+            color: #4CAF50;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="rules">
+        <h1>@ViewData["Title"]</h1>
+        <p>Be nice.</p>
+        <p>Try your best.</p>
+        <p>Become someone now that you want to be later.</p>
+        <p>When you quit, you fail.</p>
+        <p>Make what is valuable important.</p>
+        <p>Use adversity as an opportunity.</p>
+    </div>
+</body>
+</html>

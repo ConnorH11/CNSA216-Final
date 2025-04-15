@@ -1,0 +1,58 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  HARBOR_REGISTRY: harbor.cnsalab.net/t-team
+  IMAGE_NAME: $HARBOR_REGISTRY/final
+
+build-job:
+  stage: build
+  tags:
+    - deploy
+  script:
+    - echo "$HARBOR_PASSWORD" | docker login -u "$HARBOR_USERNAME" --password-stdin $HARBOR_REGISTRY
+    - docker build -t $IMAGE_NAME:$CI_COMMIT_REF_SLUG .
+    - docker tag $IMAGE_NAME:$CI_COMMIT_REF_SLUG $IMAGE_NAME:latest
+    - docker push $IMAGE_NAME:$CI_COMMIT_REF_SLUG
+    - docker push $IMAGE_NAME:latest
+
+.deploy-job-template:
+  stage: deploy
+  tags:
+    - deploy
+  before_script:
+    - eval $(ssh-agent -s)
+    - echo "$DEPLOY_SSH_KEY" | tr -d '\r' > /tmp/id_deploy_key
+    - chmod 600 /tmp/id_deploy_key
+    - ssh-add /tmp/id_deploy_key
+    - rm /tmp/id_deploy_key
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan $DEPLOY_SERVER > ~/.ssh/known_hosts
+  script:
+    - ssh -i ~/.ssh/id_ed25519 deployuser@$DEPLOY_SERVER "echo \"$HARBOR_PASSWORD\" | docker login -u \"$HARBOR_USERNAME\" --password-stdin $HARBOR_REGISTRY"
+    - ssh -i ~/.ssh/id_ed25519 deployuser@$DEPLOY_SERVER "docker pull $IMAGE_NAME:latest"
+    - ssh -i ~/.ssh/id_ed25519 deployuser@$DEPLOY_SERVER "docker stop final-app-container || true"
+    - ssh -i ~/.ssh/id_ed25519 deployuser@$DEPLOY_SERVER "docker rm final-app-container || true"
+    - ssh -i ~/.ssh/id_ed25519 deployuser@$DEPLOY_SERVER "docker run -d --restart unless-stopped --name final-app-container -p 8080:80 $IMAGE_NAME:latest"
+    - ssh -i ~/.ssh/id_ed25519 deployuser@$DEPLOY_SERVER "docker system prune -f"
+  only:
+    - main
+
+
+deploy-job-server1:
+  extends: .deploy-job-template
+  variables:
+    DEPLOY_SERVER: "10.200.12.187"
+    DEPLOY_SSH_KEY: "$DEPLOY_SSH_KEY_187"
+  only:
+    - main
+
+deploy-job-server2:
+  extends: .deploy-job-template
+  variables:
+    DEPLOY_SERVER: "10.200.12.188"
+    DEPLOY_SSH_KEY: "$DEPLOY_SSH_KEY_188"
+  only:
+    - main

@@ -1,0 +1,115 @@
+﻿@{
+    ViewData["Title"] = "Account Creation";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"]</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: rgb(138, 183, 190);
+        }
+
+        .account-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .account-box {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        h1 {
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+            .form-group label {
+                display: block;
+                margin-bottom: 0.5rem;
+                font-weight: 600;
+            }
+
+            .form-group input[type="text"],
+            .form-group input[type="password"] {
+                width: 100%;
+                padding: 0.5rem;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+            }
+
+        .button-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+        }
+
+        input[type="submit"], .back-button {
+            cursor: pointer;
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 4px;
+            background-color: #3d7ea6;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background 0.2s ease;
+        }
+
+            input[type="submit"]:hover, .back-button:hover {
+                background-color: #2e5f78;
+            }
+    </style>
+</head>
+<body>
+    <div class="account-container">
+        <div class="account-box">
+            <h1>Account Creation</h1>
+            <form method="post" action="/Account/CreateAccount">
+
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" />
+                </div>
+
+                <div class="form-group">
+                    <label for="pass">New Password</label>
+                    <input type="password" id="pass" name="password" />
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm-pass">Confirm New Password</label>
+                    <input type="password" id="confirm-pass" name="confirm-password" />
+                </div>
+
+                <div class="button-row">
+                    <button type="button" class="back-button" onclick="window.location.href='/Account/LoginPage'">Back</button>
+                    <input type="submit" value="Create" />
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
